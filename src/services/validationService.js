@@ -1,3 +1,4 @@
+const net = require('node:net');
 const dnsService = require('./dnsService');
 
 /**
@@ -10,12 +11,10 @@ const isValidHostname = (hostname) => {
 };
 
 /**
- * Basic regex for valid IPv4 addresses.
+ * Validates if a string is a valid IPv4 address using Node.js built-in 'net' module.
  */
 const isValidIPv4 = (ip) => {
-  if (!ip || typeof ip !== 'string') return false;
-  const regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-  return regex.test(ip);
+  return net.isIPv4(ip);
 };
 
 /**
