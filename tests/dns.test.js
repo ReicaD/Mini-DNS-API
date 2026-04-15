@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const DNSRecord = require('../src/models/DNSRecord');
 
-// Mock DNSRecord model
+// Mock DNSRecord model to isolate tests from the database
 jest.mock('../src/models/DNSRecord');
 
 describe('DNS API Unit Tests (Mocked)', () => {
@@ -34,7 +34,7 @@ describe('DNS API Unit Tests (Mocked)', () => {
     });
 
     it('should fail if hostname exists as CNAME', async () => {
-      // Mock CNAME existence
+      // Mock CNAME existence to trigger exclusivity conflict
       DNSRecord.findOne.mockImplementation(({ hostname, type }) => {
         if (type === 'CNAME') return Promise.resolve({ hostname, type: 'CNAME' });
         return Promise.resolve(null);

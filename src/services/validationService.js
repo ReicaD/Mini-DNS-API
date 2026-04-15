@@ -2,7 +2,7 @@ const net = require('node:net');
 const dnsService = require('./dnsService');
 
 /**
- * Basic regex for valid hostnames.
+ * Validates hostname format based on standard DNS rules.
  */
 const isValidHostname = (hostname) => {
   if (!hostname || typeof hostname !== 'string') return false;
@@ -11,30 +11,25 @@ const isValidHostname = (hostname) => {
 };
 
 /**
- * Validates if a string is a valid IPv4 address using Node.js built-in 'net' module.
+ * Validates IPv4 address using Node.js built-in 'net' module.
  */
 const isValidIPv4 = (ip) => {
   return net.isIPv4(ip);
 };
 
 /**
- * Validates a DNS record against predefined rules.
+ * Validates a DNS record against RFC rules and record exclusivity constraints.
  * Throws descriptive Errors if validation fails.
- * 
- * @param {string} rawHostname 
- * @param {string} type 
- * @param {string} value 
  */
 const validateDnsRecord = async (rawHostname, type, value) => {
-  // Basic sanity check before normalization
   if (typeof rawHostname !== 'string') {
     throw new Error('Invalid hostname: Must be a string');
   }
 
-  // Treat case-insensitively (normalize to lowercase)
+  // Normalize hostname to lowercase for consistency
   const hostname = rawHostname.toLowerCase();
 
-  // 1. Basic Input validation
+  // 1. Basic format validation
   if (!isValidHostname(hostname)) {
     throw new Error('Invalid hostname');
   }
@@ -51,27 +46,24 @@ const validateDnsRecord = async (rawHostname, type, value) => {
     throw new Error('Invalid record type. Must be A or CNAME.');
   }
 
-  // 2. Duplicate Prevention
+  // 2. Duplicate detection
   const exists = await dnsService.recordExists(hostname, type, value);
   if (exists) {
     throw new Error('Duplicate record already exists');
   }
 
-  // 3. Fetch existing records for conflict checking
+  // 3. Conflict Rule: CNAME Exclusivity
   const existingCname = await dnsService.getCNAMERecord(hostname);
   const existingRecords = await dnsService.getRecordsByHostname(hostname);
 
-  // 4. DNS Conflict Rules
-  if (type === 'A') {
-    // If a CNAME exists for a hostname -> reject adding A records
-    if (existingCname) {
-      throw new Error('Cannot add A record when CNAME exists');
-    }
-  } else if (type === 'CNAME') {
-    // If any record exists (A or CNAME) -> reject adding a CNAME
-    if (existingRecords.length > 0) {
-      throw new Error('Cannot add CNAME when other records exist for this hostname');
-    }
+  // If a CNAME exists for a hostname -> reject adding any other records (including A)
+  if (type === 'A' && existingCname) {
+    throw new Error('Cannot add A record when CNAME exists');
+  }
+
+  // If any record (A or CNAME) exists -> reject adding a new CNAME
+  if (type === 'CNAME' && existingRecords.length > 0) {
+    throw new Error('Cannot add CNAME when other records exist for this hostname');
   }
 
   return true;

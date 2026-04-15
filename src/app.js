@@ -9,12 +9,12 @@ app.use(express.json());
 // Routes
 app.use('/api/dns', dnsRoutes);
 
-// Basic Health Check Route
+// Health Check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'Server is up and running!' });
 });
 
-// Global Error Handler Middleware
+// Centralized Global Error Handler
 app.use((err, req, res, next) => {
   const statusCode = err.status || 400;
   res.status(statusCode).json({

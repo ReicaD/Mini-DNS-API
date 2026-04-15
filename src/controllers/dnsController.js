@@ -7,6 +7,7 @@ const dnsService = require('../services/dnsService');
  * POST /api/dns
  */
 const createDnsRecord = async (req, res, next) => {
+  // Asynchronous logging of the request
   setImmediate(() => {
     console.log(`[DNS LOG] ASYNC LOG: POST /api/dns - Body: ${JSON.stringify(req.body)}`);
   });
@@ -14,7 +15,7 @@ const createDnsRecord = async (req, res, next) => {
   try {
     const { hostname, type, value, ttl } = req.body;
     
-    // Validate rigorously against DNS rules
+    // Rigorous validation against DNS constraints
     await validationService.validateDnsRecord(hostname, type, value);
     
     const recordData = {
@@ -82,7 +83,7 @@ const resolveDns = async (req, res, next) => {
 
     res.status(200).json(result);
   } catch (error) {
-    // Circular reference or chain-too-long errors are client-meaningful
+    // Handle circular reference and chain-length errors as 400 Bad Request
     if (error.message.includes('Circular') || error.message.includes('chain too long')) {
       return res.status(400).json({ error: error.message });
     }
@@ -91,7 +92,7 @@ const resolveDns = async (req, res, next) => {
 };
 
 /**
- * Deletes a specific DNS record.
+ * Deletes a specific DNS record based on hostname, type, and value.
  * DELETE /api/dns/:hostname
  */
 const deleteDnsRecord = async (req, res, next) => {

@@ -12,7 +12,7 @@ if (!process.env.MONGO_URI && process.env.NODE_ENV !== 'test') {
 // Connect to Database
 connectDB();
 
-// Start TTL Background Job (Internal logic for record expiration)
+// Start TTL Background Job for record expiration
 dnsService.startTTLJob();
 
 const PORT = process.env.PORT || 3000;
@@ -21,7 +21,7 @@ const server = app.listen(PORT, () => {
   console.log(`[Mini-DNS] Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
 
-// Graceful Shutdown
+// Graceful Shutdown handling
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
   server.close(() => {
